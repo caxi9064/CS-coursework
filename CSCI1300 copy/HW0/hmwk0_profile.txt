@@ -1,0 +1,12 @@
+——Student Profile——
+
+Name: Catherine 
+
+Major/minor: Computer science 
+
+Programming experience: none
+
+What do you expect to learn in this course?
+
+Writing code in C++ and how to think like a programmer 
+
