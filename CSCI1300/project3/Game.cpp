@@ -1,5 +1,5 @@
 // CS1300 Fall 2020
-// Author: Catherine Xiao
+// Author: Catherine Xiao, Jules Geneser 
 // Recitation: 326- Sanskar Katiyar
 // Project 3
 
@@ -13,6 +13,9 @@
 #include <vector>
 #include <fstream>
 #include <cmath>
+#include <iomanip>
+#include <cstdlib>
+#include <string>
 using namespace std;
 Game::Game()
 {
@@ -22,23 +25,13 @@ Game::Game()
         players[i].setScore(0);
         players[i].setHealth(100);
     }
-    for (int i = 0; i < landmarks.size(); i++)
-    {
-        landmarks[i].setLandmarkName("");
-        landmarks[i].setLandmarkDistance(0);
-    }
 }
-Game::Game(vector<Player> players, vector<Landmark> landmarks)
+Game::Game(vector<Player> players)
 {
     for (int i = 0; i < players.size(); i++)
     {
         //setting vector of player objects
         this->players[i] = players[i];
-    }
-    for (int i = 0; i < landmarks.size(); i++)
-    {
-        //setting vector of player objects
-        this->landmarks[i] = landmarks[i];
     }
 }
 
@@ -160,6 +153,18 @@ void Game::printInventory() //prints amount of items available in the inventory
     << "\nTotal Medical Kits: " << inv.getMedicalKits() << "\nTotal Wagon Parts: " << inv.getWagonParts()
     << "\nTotal Ammunition: " << inv.getAmmunition() << endl << endl;
 }
+void Game::readStoreInfo()//read store_info.txt 
+{
+    string line;
+    ifstream storeInfo;
+    storeInfo.open("store_info.txt");
+    cout << endl;
+    while(getline(storeInfo, line))
+    {
+        cout << line << endl;
+    }
+    cout << endl;
+}
 void Game::StartingInfo() //prompts user for player names/starting date- stores names in vector
 {
     string s;
@@ -167,6 +172,7 @@ void Game::StartingInfo() //prompts user for player names/starting date- stores 
     getline(cin, s);
     Player player1(s, 0, 100);
     players.push_back(player1);
+    p.setUsername(s);//setting the username of the player
 
     cout << "ENTER THE NAMES OF YOUR TEAM: \n"
          << "p2: \n"
@@ -232,21 +238,8 @@ void Game::randomNumGenerator(int a, int b) //generates a random number
     srand(time(0));
     random = rand() % difference + a;
 }
-bool Game::Misfortunes()//occurs at end of every turn- also serves as a check for end game conditions 
-{
-    //Conditions for ending game 
-    if (inv.getFoodRemaining()<=0 || inv.getOxen()<=0)
-    {
-        if (inv.getOxen()<=0)
-        {
-            cout << endl << "NO OXEN REMAINING. GAME OVER" << endl;
-        }
-        if (inv.getFoodRemaining() <= 0)
-        {
-            cout << endl << "NO FOOD REMAINING. GAME OVER" << endl;
-        }
-        return true;
-    }
+bool Game::Misfortunes()//occurs at end of every turn- also checks end condition for wagon parts 
+{ 
     randomNumGenerator(1,100);
     int num = getRandomNum();
     if (num >= 1 && num <= 40)//40% chance misfortune will occur
@@ -600,44 +593,114 @@ void Game::readMilestonesFile()//this function will read milestones.txt and stor
         Landmark L(array[0], stoi(array[1]));
         landmarks.push_back(L);
     }
+    Landmark L("Oregon City", 2400);
+    landmarks.push_back(L); 
 }
-void Game::FinalStats()
+void Game::FinalStats()//reads results to results.txt and sorting algorithm
 {
-    //final stats are calculated based on:
+    // variables used!!!
+    string line, username, resultSt;
+    int max, indx, result;
     
-    // extra inventory supplies 
-    int finalScore = inv.getCashAvailable() + inv.getFoodRemaining() + inv.getMedicalKits()+ inv.getAmmunition()+ inv.getOxen() + inv.getWagonParts();
+    // vectors
+    vector <int> resultNum;
+    vector <string> resultUsername;
+    vector <int> sortedNum;
+    vector <string> sortedUsername;
 
-    //player points, health score
-    for (int i = 0; i < players.size(); i++)
-    {
-        finalScore += (getPointsAt(i) + getHealthAt(i));
+    //score is how many resources you have left after successfully completing the game
+    result = inv.getAmmunition() + inv.getFoodRemaining() + inv.getFoodRemaining() + inv.getMedicalKits() + inv.getOxen() + inv.getWagonParts();
+    
+    //READING TO RESULTS.TXT
+    fstream resultsFile;
+    resultsFile.open ("results.txt", ios :: app); // ios :: app writes to the end of the file so that it keeps its previous content
+    resultsFile << p.getUsername() << " " << result << endl; // add the username and their score to the end of the file
+    resultsFile.close(); // make sure to close the file
+ 
+    //adding the user and their scores to vectors
+    resultsFile.open("results.txt"); // open the file
+    
+    while (getline (resultsFile, line) && line != ""){ // while you can still get a line and the line isn't empty
+        username = ""; // set the username to an empty string
+        resultSt = ""; // set the result to an empty string
+        for (int i = 0; i < line.length(); i++) // for the length of the line
+        {
+            if (isalpha(line[i]) || line[i] == ' ') // if the character is a letter or a space add it to the username
+            {
+                username = username + line [i];
+            }
+            else // if it was a number add it to the number string
+            {
+                resultSt = resultSt + line [i];
+            }
+        }
+        resultNum.push_back(stoi(resultSt)); //add the score to the score vector 
+        resultUsername.push_back(username); //add the username to the username vector
     }
 
-    //distance traveled
-    finalScore += m.getTotalMileage();
+    //SORTING ALGORITHM
+    cout << "THE SORTED LIST: " << endl;
 
-    //multiply by travelers still alive
-    finalScore *= p.getTotalTravelers(); 
+    for (int i = 0; i < resultNum.size(); i++) // for the number of elements in the vector
+    {
+        max = resultNum.at(0); // set the max equal to the first number in the vector
+        indx = 0; // set the index = 0
+    
+        for (int j = 1; j < resultNum.size(); j++) // find the total max of the vector
+        {
+            if (resultNum.at(j) > max){
+                max = resultNum.at(j);
+                indx = j;
+            }
+        }
+        sortedNum.push_back(resultNum.at(indx)); // add the number to the sorted vector
+        sortedUsername.push_back(resultUsername.at(indx)); // add the corresponding username
+        resultNum.at(indx) = 0; // set the number equal to 0 so that it can no longer be a max value
+    }
 
-    cout << endl <<  "---FINAL STATS---" << endl 
-        << "Leader Name: " << getNameAt(0) << endl
-        << "Current Date: " << d.getMonth() << "/" << d.getDay() << "/" << d.getYear() << endl
-        << "Total Miles Traveled: " << m.getTotalMileage() << endl
-        << "Distance Until Next Milestone: " << m.getDistanceRemaining() << endl
-        << "Food Available (lbs): " << inv.getFoodRemaining() << endl
-        << "Total Ammunition: " << inv.getAmmunition() << endl
-        << "Cash Available: " << inv.getCashAvailable() << endl 
-        << "OVERALL SCORE: " << finalScore << endl
-        << "----FINAL STATS----"  << endl << endl;
+    // print out the top 5
+    cout << endl << "Top Five Scores: " << endl;
+    for (int i = 0; i < 5; i++)
+    {
+        cout << i + 1 << ". ";
+        cout << sortedUsername.at(i) << " " << sortedNum.at(i) << endl;
+    } 
 }
-void Game::run()
+bool Game::endGameCheck()//checks end game conditions
+{
+    //Conditions for ending game 
+    if (inv.getFoodRemaining()<=0 || inv.getOxen()<=0)//run out of supplies
+    {
+        if (inv.getOxen()<=0)
+        {
+            cout << endl << "NO OXEN REMAINING. GAME OVER" << endl;
+        }
+        if (inv.getFoodRemaining() <= 0)
+        {
+            cout << endl << "NO FOOD REMAINING. GAME OVER" << endl;
+        }
+        return true;
+    }
+    if (d.getMonth() == 11 && d.getDay() == 30)//did not reach oregon cit by deadline
+    {
+        cout << "YOU DID NOT REACH OREGON BY 11/30" << endl; 
+        return true;
+    }
+    if (getHealthAt(0) == 0)//if player 1 dies game ends
+    {
+        cout << endl << "UNFORTUNATELY YOU HAVE DIED. GAME OVER" << endl;
+        return true;
+    }
+    else return false;
+}
+void Game::run()//all the function calls will be in here
 {
     int option;
     string s;
 
     StartingInfo(); //prompt user for names and starting date
-
+    readStoreInfo();//reading store info to the user 
+    
     cout << "Would you like to visit the store? Y/N" << endl;
     getline(cin, s);
     while (s != "Y" && s != "N")
@@ -653,27 +716,17 @@ void Game::run()
     printInventory();//prints quantity of all items in inventory
 
     readMilestonesFile();//read milestones file and store landmark/distance in a vector
-    
-    bool result = false;
-    int count = 0;//count keeps track of the landmark distance 
-    
-    if (inv.getFoodRemaining()<=0 || inv.getOxen()<=0)//Check end conditions before game begins
-    {
-        if (inv.getOxen()<=0)
-        {
-            cout << endl << "NO OXEN REMAINING. GAME OVER" << endl;
-        }
-        if (inv.getFoodRemaining() <= 0)
-        {
-            cout << endl << "NO FOOD REMAINING. GAME OVER" << endl;
-        }
-        result = true;
-    }
-    while (option != 5 && result == false) 
-    {
-        //While user does not choose option quit continue prompting user to choose from menu
-        //at any point if player runs out of food Misfortunes() will return true and game ends
 
+    int count = 0;//count keeps track of the landmarks reached 
+    bool result = endGameCheck();
+    while (option != 5 && result != true) 
+    {   
+        //While user does not choose option quit continue prompting user to choose from menu
+        //end game conditions: if either Misfortunes() or endGameConditions() returns true
+        result = endGameCheck();
+        if (result == true) {
+            break;
+        }
         printTurnsMenu(); 
         getline(cin, s);
         option = stoi(s);
@@ -698,10 +751,19 @@ void Game::run()
                     int foodRemaining = inv.getFoodRemaining() - (p.getTotalTravelers() * 3 * 14);
                     inv.setFoodRemaining(foodRemaining);
 
-                    bool result = Misfortunes();
-                    if (result == false) 
-                    RaiderAttack();
-                    else option = 5;
+                    //checking end conditions
+                    result = endGameCheck();
+                    if (result != true)
+                    {
+                        result = Misfortunes();//checks if wagon is broken
+                        if (result != true)
+                        RaiderAttack(); 
+                    }
+                }
+                else if (totalMiles >= 2400)//they reached Oregon city
+                {
+                    result = true;
+                    cout << endl << "CONGRAGULATIONS! YOU HAVE REACHED " << landmarks[15].getLandmarkName() << endl; break;
                 }
                 else //if total mileage exceeds that of the next milestone's distance
                 {
@@ -747,17 +809,9 @@ void Game::run()
                                 cout << endl << "Invalid option. Try Again." << endl;
                             }
                             //end game check
-                            if (inv.getFoodRemaining()<=0 || inv.getOxen()<=0)
-                            {
-                                if (inv.getOxen()<=0)
-                                {
-                                    cout << endl << "NO OXEN REMAINING. GAME OVER" << endl;
-                                }
-                                if (inv.getFoodRemaining() <= 0)
-                                {
-                                    cout << endl << "NO FOOD REMAINING. GAME OVER" << endl;
-                                }
-                                result = true;
+                            result = endGameCheck();
+                            if (result == true){
+                                break;
                             }
                         }
                         //choose to continue
@@ -787,17 +841,9 @@ void Game::run()
                                 cout << endl << "Invalid option. Try Again." << endl;
                             }
                             //end game check
-                            if (inv.getFoodRemaining()<=0 || inv.getOxen()<=0)
-                            {
-                                if (inv.getOxen()<=0)
-                                {
-                                    cout << endl << "NO OXEN REMAINING. GAME OVER" << endl;
-                                }
-                                if (inv.getFoodRemaining() <= 0)
-                                {
-                                    cout << endl << "NO FOOD REMAINING. GAME OVER" << endl;
-                                }
-                                result = true;
+                            result = endGameCheck();
+                            if (result == true){
+                                break;
                             }
                         }
                         //continue
@@ -818,25 +864,34 @@ void Game::run()
                 int foodRemaining = inv.getFoodRemaining() - (p.getTotalTravelers() * 3 * daysRested); //entire party consumes 15 lbs per day
                 inv.setFoodRemaining(foodRemaining);
 
-                result = Misfortunes();
-                if (result == false) 
-                RaiderAttack();
-                else option = 5;
+                //checking end conditions
+                result = endGameCheck();
+                if (result != true)
+                {
+                    result = Misfortunes();//misfortunes checks if wagon is broken
+                    if (result != true)
+                    RaiderAttack(); 
+                }
             } break;
             case 3: //hunt option
             {
                 Hunt();
-                result = Misfortunes();
-                if (result == false) 
-                RaiderAttack();
-                else option = 5;
+
+                //checking end conditions
+                result = endGameCheck();
+                if (result != true)
+                {
+                    result = Misfortunes();//misfortunes checks if wagon is broken
+                    if (result != true)
+                    RaiderAttack(); 
+                }
             }  break;
             case 4://check inventory
             printInventory(); break; 
             case 5: cout << "GAME HAS ENDED" << endl; break;
             default: cout << "Invalid option. Enter a number btw 1-4" << endl;break;
         }
-        cout << endl;
     }
-    FinalStats();
+    printStatusUpdate();
+    FinalStats();//this will store results in results.txt 
 }

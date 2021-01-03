@@ -1,7 +1,8 @@
 // CS1300 Fall 2020
-// Author: Catherine Xiao
+// Author: Catherine Xiao, Jules Geneser 
 // Recitation: 326- Sanskar Katiyar
 // Project 3
+
 #ifndef GAME_H
 #define GAME_H
 #include <string>
@@ -16,7 +17,7 @@ class Game
 {
     public:
     Game();
-    Game(vector<Player> players, vector<Landmark> landmarks);
+    Game(vector<Player> players);
 
     //getters
     string getNameAt(int index)const;//return player name at index
@@ -33,6 +34,7 @@ class Game
 
     void printTurnsMenu();//print menu of options at each turn
     void printStoreMenu();//prints store menu 
+    void readStoreInfo();//read store_info.txt
     void printInventory();//prints amount of items in the inventory
     void StartingInfo();//prompts user for name and date 
     void printStatusUpdate(); ///prints the date and other milestones at each turn
@@ -46,8 +48,7 @@ class Game
     void LandmarkCheck();//this function will allow us to set distance to the next landmark 
     void FinalStats();//function prints final stats for the player
     void run();//includes all other functions
-
-
+    bool endGameCheck();//checks end game conditions
     private:
     //declaring objects of other classes
     Inventory inv;

@@ -1,3 +1,8 @@
+// CS1300 Fall 2020
+// Author: Catherine Xiao, Jules Geneser 
+// Recitation: 326- Sanskar Katiyar
+// Project 3
+
 #ifndef DATE_H
 #define DATE_H
 #include <string>

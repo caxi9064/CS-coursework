@@ -1,7 +1,8 @@
 // CS1300 Fall 2020
-// Author: Catherine Xiao
+// Author: Catherine Xiao, Jules Geneser 
 // Recitation: 326- Sanskar Katiyar
 // Project 3
+
 #include "Player.h"
 #include <string>
 using namespace std;
